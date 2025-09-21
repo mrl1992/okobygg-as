@@ -35,6 +35,6 @@ export default defineNuxtConfig({
     },
   },
   app: {
-    baseURL: "/", // 👈 important for GitHub Pages
+    baseURL: "/okobygg-as/", // 👈 important for GitHub Pages
   },
 });
