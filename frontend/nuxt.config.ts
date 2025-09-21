@@ -34,4 +34,7 @@ export default defineNuxtConfig({
       },
     },
   },
+  app: {
+    baseURL: "/", // 👈 important for GitHub Pages
+  },
 });
