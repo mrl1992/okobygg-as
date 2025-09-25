@@ -4,6 +4,7 @@ export default defineNuxtConfig({
   compatibilityDate: "2025-09-10",
   css: ["~/stylesheets/style.scss", "vuetify/styles"],
   runtimeConfig: {
+    sanityToken: process.env.NUXT_SANITY_API_READ_TOKEN || "",
     public: {
       sanityProjectId: process.env.NUXT_SANITY_PROJECT_ID || "",
       sanityDataset: process.env.NUXT_SANITY_DATASET || "production",
@@ -35,6 +36,6 @@ export default defineNuxtConfig({
     },
   },
   app: {
-    baseURL: "/okobygg-as/", // 👈 important for GitHub Pages
+    baseURL: "/okobygg/", // 👈 important for GitHub Pages
   },
 });

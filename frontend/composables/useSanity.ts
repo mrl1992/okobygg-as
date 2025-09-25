@@ -7,6 +7,6 @@ export const useSanity = () => {
     projectId: config.public.sanityProjectId,
     dataset: config.public.sanityDataset,
     apiVersion: config.public.sanityApiVersion,
-    useCdn: false, // use false to always get fresh data while debugging
+    useCdn: true, // use false to always get fresh data while debugging
   });
 };
