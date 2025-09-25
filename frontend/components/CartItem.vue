@@ -1,12 +1,16 @@
 <template>
-  <div v-for="id in uniqueIds" :key="id" class="d-flex pa-4 align-start">
-    <v-img
-      :src="productById(id)?.imageUrl"
-      :alt="productById(id)?.title"
-      width="120"
-      height="120"
-      class="ma-0 pa-0"
-    />
+  <div v-for="id in uniqueIds" :key="id" class="d-flex align-start pa-4">
+    <div
+      style="height: 100px; width: 120px; overflow: hidden"
+      class="rounded mr-4"
+    >
+      <v-img
+        :src="productById(id)?.imageUrl"
+        :alt="productById(id)?.title"
+        cover
+      />
+    </div>
+
     <div>
       <h4 class="mb-1">
         {{
@@ -15,13 +19,13 @@
             : productById(id)?.title
         }}
       </h4>
-
+      <!-- 
       <p v-if="count(id) > 0" class="mb-1 d-flex align-center">
         Antall:
-        <span class="mx-2">{{ count(id) }}</span>
+        <span class="mx-2">{{ count(id) }}</span> -->
 
-        <!-- Minus button: remove one item of this id from the cart -->
-        <!-- <v-btn
+      <!-- Minus button: remove one item of this id from the cart -->
+      <!-- <v-btn
           small
           icon
           @click="removeOne(id)"
@@ -31,13 +35,13 @@
           <v-icon small>mdi-minus</v-icon>
         </v-btn> -->
 
-        <!-- Plus button: add one more of this product to the cart -->
-        <!-- <v-btn small icon @click="addOne(id)" class="ml-1">
+      <!-- Plus button: add one more of this product to the cart -->
+      <!-- <v-btn small icon @click="addOne(id)" class="ml-1">
           <v-icon small>mdi-plus</v-icon>
         </v-btn> -->
 
-        <!-- Delete button: remove all items with this id from the cart -->
-        <!-- <v-btn
+      <!-- Delete button: remove all items with this id from the cart -->
+      <!-- <v-btn
           small
           icon
           color="red"
@@ -50,17 +54,25 @@
         >
           <v-icon small>mdi-delete</v-icon>
         </v-btn> -->
-      </p>
+      <!-- </p> -->
       <div>
-        <v-btn size="x-small" variant="outlined" @click="removeOne(id)">
-          <v-icon small>mdi-minus</v-icon>
-        </v-btn>
-        <v-btn
-          class="ml-2"
-          size="x-small"
-          variant="outlined"
-          @click="addOne(id)"
-        >
+        <v-tooltip location="bottom">
+          <template #activator="{ props }">
+            <v-btn
+              size="x-small"
+              variant="outlined"
+              @click="removeOne(id)"
+              v-bind="props"
+            >
+              <v-icon small>mdi-minus</v-icon>
+            </v-btn>
+          </template>
+          <span>Fjern én</span>
+        </v-tooltip>
+
+        <span class="mx-2">{{ count(id) }}</span>
+
+        <v-btn size="x-small" variant="outlined" @click="addOne(id)">
           <v-icon small>mdi-plus</v-icon>
         </v-btn>
       </div>

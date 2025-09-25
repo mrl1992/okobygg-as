@@ -14,4 +14,5 @@ export interface Product {
   width?: number; // in cm
   height?: number; // in cm
   weight?: number; // in kg
+  meassurements?: number;
 }

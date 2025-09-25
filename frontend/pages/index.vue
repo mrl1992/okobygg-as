@@ -11,8 +11,8 @@
 </script>
 
 <template>
-  <v-container class="px-4" style="max-width: 1200px; width: 100%">
-    <section class="w-100 d-flex justify-center mt-12">
+  <v-container class="px-4" style="max-width: 1500px; width: 100%">
+    <section class="w-100 d-flex justify-center mt-8">
       <v-sheet
         class="rounded-lg overflow-hidden hero"
         elevation="2"
@@ -98,7 +98,7 @@
           md="4"
         >
           <v-card class="d-flex flex-column h-100">
-            <v-img :src="category.imageUrl" height="220" class="w-100" cover />
+            <v-img :src="category.imageUrl" height="320" class="w-100" cover />
 
             <v-card-title class="pt-3 pb-1">{{ category.title }}</v-card-title>
 
@@ -222,7 +222,9 @@
               <v-btn variant="outlined" color="white" class="mr-4"
                 >Kontakt oss</v-btn
               >
-              <v-btn variant="outlined" color="white">Produktvelger</v-btn>
+              <NuxtLink to="/product-picker">
+                <v-btn variant="outlined" color="white">Produktvelger</v-btn>
+              </NuxtLink>
             </div>
           </div>
         </v-card>
@@ -265,22 +267,22 @@
     color: #eee;
     margin: 0;
     font-weight: 600;
-    font-size: 2.25rem;
+    font-size: 3.25rem;
     line-height: 1.05;
   }
   .hero-subtitle {
     color: #eee;
     margin-top: 0.5rem;
-    font-size: 1rem;
+    font-size: 1.125rem;
   }
 
   /* Larger on medium+ screens */
   @media (min-width: 960px) {
     .hero-title {
-      font-size: 3.25rem;
+      font-size: 6.25rem;
     }
     .hero-subtitle {
-      font-size: 1.125rem;
+      font-size: 1.5rem;
     }
   }
 
@@ -319,10 +321,10 @@
       width: 100% !important;
     }
     .hero-title {
-      font-size: 1.75rem;
+      font-size: 1.85rem;
     }
     .hero-subtitle {
-      font-size: 0.95rem;
+      font-size: 1.2rem;
     }
   }
 

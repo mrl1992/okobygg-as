@@ -81,4 +81,42 @@ export const sanityService = {
     }`;
     return await client.fetch(query);
   },
+
+  async getPlacements() {
+    const client = useSanity();
+    const query = `*[_type == "placement"]{
+    _id,
+    title,
+    value
+  }`;
+    return await client.fetch(query);
+  },
+  async getProductsByPlacement(value: string, thickness?: number) {
+    const client = useSanity();
+    let query = `*[_type == "product" && $value in placements[]->value`;
+    if (thickness) {
+      query += ` && thickness == $thickness`;
+    }
+    query += `]{
+    _id,
+    title,
+    price,
+    description,
+    thickness,
+    meassurement,
+    "slug": slug.current,
+    "imageUrl": poster.asset->url,
+    placements[]->{
+      _id,
+      title,
+      value
+    },
+    "category": category->{
+      _id,
+      title
+    }
+  }`;
+
+    return await client.fetch(query, { value, thickness });
+  },
 };

@@ -153,5 +153,12 @@ export const products = defineType({
       type: 'number',
       description: 'Vekt i kilogram',
     }),
+    defineField({
+      name: 'placements',
+      title: 'Bruksområder',
+      type: 'array',
+      of: [{type: 'reference', to: [{type: 'placement'}]}],
+      validation: (rule) => rule.required().min(1),
+    }),
   ],
 })
