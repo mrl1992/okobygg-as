@@ -40,11 +40,13 @@ export const useProductsStore = defineStore("products", () => {
   }
 
   const cartItems = ref<Product[]>([]);
-  function addToCart(product: Product) {
-    console.log("🚀 ~ product:", product);
-    // cartItems.value is initialized to [] so push directly
-    cartItems.value.push(product);
-    console.log("Adding to cart:", cartItems.value);
+  function addToCart(product: Product, quantity = 1) {
+    console.log("🚀 ~ product:", product, "quantity:", quantity);
+    const qty = Math.max(1, Math.floor(Number(quantity) || 1));
+    for (let i = 0; i < qty; i++) {
+      cartItems.value.push(product);
+    }
+    console.log(`Added ${qty} item(s) to cart:`, cartItems.value);
   }
 
   const fetchProductBySlug = async (slug: string) => {

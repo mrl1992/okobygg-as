@@ -1,6 +1,6 @@
 <template>
   <v-container class="d-flex">
-    <v-card class="w-66 mr-6">
+    <v-card class="w-66 mr-6" color="primary-light">
       <v-card-title class="d-flex align-center">
         <v-icon>mdi-account-outline</v-icon>
         Personlig informasjon
@@ -14,6 +14,9 @@
           <v-text-field label="E-post"></v-text-field>
           <v-text-field class="ml-4" label="Telefon"></v-text-field>
         </div>
+        <div>
+          <v-textarea :label="'Kommentar til bestilling'"></v-textarea>
+        </div>
       </v-card-text>
     </v-card>
     <v-card class="w-33">
@@ -21,7 +24,7 @@
         Bestillingsoversikt
       </v-card-title>
       <v-card-text>
-        <CartItem />
+        <CartItem :checkout="true" />
       </v-card-text>
     </v-card>
   </v-container>

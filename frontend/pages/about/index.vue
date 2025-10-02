@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-btn @click="send">send</v-btn>
-    <v-card color="primary-light mt-12">
+    <v-card color="primary-light ">
       <v-card-title class="text-h4 font-weight-bold text-center"
         >Om Oss</v-card-title
       >
