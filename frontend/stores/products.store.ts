@@ -63,6 +63,8 @@ export const useProductsStore = defineStore("products", () => {
     }
   };
 
+  const currentCategory = ref("");
+
   return {
     products,
     loading,
@@ -73,5 +75,6 @@ export const useProductsStore = defineStore("products", () => {
     cartItems,
     addToCart,
     fetchProductBySlug,
+    currentCategory,
   };
 });

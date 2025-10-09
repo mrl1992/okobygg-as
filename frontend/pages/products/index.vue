@@ -1,10 +1,7 @@
 <template>
   <v-container>
-    <!-- Watermark logo (adjust src, size, opacity as needed) -->
-
     <div style="position: relative; z-index: 1">
       <v-row class="d-flex justify-center my-4">
-        <!-- Desktop / larger screens: button toggle -->
         <div
           class="d-none d-md-flex w-100"
           style="background-color: #f5f5f5; padding: 8px; border-radius: 8px"
@@ -44,7 +41,7 @@
           />
         </div>
       </v-row>
-      <v-row class="d-flex flex-wrap">
+      <v-row class="d-block d-md-flex flex-wrap">
         <v-col v-for="product in productsFromStore" :key="product._id">
           <product-card :product="product" />
         </v-col>
@@ -73,18 +70,29 @@
         title: "Alle",
         description: "All products",
       });
+      if (productsStore.currentCategory !== "") {
+        activeCategory.value = productsStore.currentCategory;
+      }
     }
   });
 
-  watch(activeCategory, (newCategory) => {
-    if (newCategory === "Alle") {
-      productsFromStore.value = productsStore.products.sort((a, b) =>
-        (a.category?.title ?? "").localeCompare(b.category?.title ?? "")
-      );
-    } else {
-      productsFromStore.value = productsStore.products.filter(
-        (p) => p.category?.title === newCategory
-      );
-    }
+  watch(
+    activeCategory,
+    (newCategory) => {
+      if (newCategory === "Alle") {
+        productsFromStore.value = productsStore.products.sort((a, b) =>
+          (a.category?.title ?? "").localeCompare(b.category?.title ?? "")
+        );
+      } else {
+        productsFromStore.value = productsStore.products.filter(
+          (p) => p.category?.title === newCategory
+        );
+      }
+    },
+    { immediate: true }
+  );
+
+  onUnmounted(() => {
+    productsStore.currentCategory = "";
   });
 </script>

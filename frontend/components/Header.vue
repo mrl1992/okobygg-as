@@ -19,51 +19,60 @@
       <NuxtLink to="/about">Om oss</NuxtLink>
       <v-divider vertical class="mx-4" />
 
-      <div
+      <v-badge
+        class="mr-4"
         v-if="productStore.cartItems.length > 0"
-        style="
-          position: relative;
-          margin-left: 10px;
-          margin-right: -40px;
-          margin-bottom: -25px;
-          margin-top: -60px;
-          border-radius: 50%;
-          height: 24px;
-          width: 24px;
-          background-color: red;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          text-align: center;
-          color: white;
-        "
+        :content="productStore.cartItems.length"
+        color="red"
+        overlap
       >
-        <span color="white">
-          {{ productStore.cartItems.length }}
-        </span>
-      </div>
-      <v-icon @click="drawer = !drawer" size="large" class="mr-4"
+        <v-icon @click="drawer = !drawer" size="large" class=""
+          >mdi-cart-outline</v-icon
+        >
+      </v-badge>
+      <v-icon v-else @click="drawer = !drawer" size="large" class="mr-4"
         >mdi-cart-outline</v-icon
       >
     </div>
     <div class="d-flex d-md-none">
-      <v-menu height="1200">
+      <v-menu
+        offset-y
+        transition="fade-transition"
+        close-on-content-click
+        max-height="400"
+        min-width="200"
+      >
         <template #activator="{ props }">
-          <v-icon v-bind="props" class="mr-4">mdi-menu</v-icon>
+          <v-badge
+            class="mr-4"
+            v-if="productStore.cartItems.length > 0"
+            :content="productStore.cartItems.length"
+            color="red"
+            overlap
+          >
+            <v-icon v-bind="props">mdi-menu</v-icon>
+          </v-badge>
+          <v-icon v-else v-bind="props" class="mr-4">mdi-menu</v-icon>
         </template>
         <template #default>
-          <v-list>
-            <v-list-item>
-              <NuxtLink to="/">About</NuxtLink>
-            </v-list-item>
-            <v-list-item>
-              <NuxtLink to="/products">Products</NuxtLink>
-            </v-list-item>
-            <v-list-item>
-              <NuxtLink to="/cart">
-                <v-btn>Gå til utsjekk</v-btn>
-              </NuxtLink>
-            </v-list-item>
+          <v-list style="overflow: auto">
+            <NuxtLink to="/products">
+              <v-list-item> Produkter </v-list-item>
+            </NuxtLink>
+            <NuxtLink to="/about">
+              <v-list-item> Om oss </v-list-item>
+            </NuxtLink>
+            <NuxtLink to="/checkout">
+              <v-list-item>
+                <v-btn
+                  color="primary"
+                  class="mx-4"
+                  :disabled="calculateTotal === 0"
+                >
+                  Gå til utsjekk
+                </v-btn>
+              </v-list-item>
+            </NuxtLink>
           </v-list>
         </template>
       </v-menu>

@@ -1,279 +1,350 @@
-<template>
-  <v-container>
-    <div>
-      <h1>Produktvelger</h1>
-      <v-select
-        v-model="selectedArea"
-        :items="areasOfApplication"
-        item-text="title"
-        item-value="value"
-        label="Velg bruksområde"
-      />
-      <v-select
-        v-if="selectedArea === 'walls' || selectedArea === 'roof'"
-        :items="[50, 100]"
-        label="Ønsket isolasjonstykkelse(mm)"
-        v-model="selectedThickness"
-        :rules="[validationRules.notEmpty]"
-      ></v-select>
-      <div v-if="selectedArea === 'walls'">
-        <v-text-field
-          label="Hvor mange vegger skal isoleres?"
-          v-model="numberOfWalls"
-          type="number"
-          :rules="[validationRules.notEmpty]"
-        />
-        <v-card
-          v-for="(wall, i) in numberOfWallsList"
-          :key="i"
-          style="
-            border-left: 10px solid rgba(var(--v-theme-primary));
-            padding: 1rem;
-            margin-top: 1rem;
-          "
-          class="rounded"
-        >
-          <p>Vegg {{ i + 1 }}</p>
-          <v-text-field
-            v-model="wall.height"
-            label="Høyde (cm)"
-            type="number"
-            :rules="[validationRules.notEmpty]"
-          ></v-text-field>
-          <v-text-field
-            v-model="wall.length"
-            label="Lengde (cm)"
-            type="number"
-            :rules="[validationRules.notEmpty]"
-          ></v-text-field>
-        </v-card>
-      </div>
-
-      <v-checkbox
-        v-if="selectedArea === 'walls'"
-        :label="'Skal vinduene på veggen isoleres?'"
-        v-model="includeWindows"
-      />
-      <div>
-        <v-text-field
-          :label="'Hvor mange vinduer skal isoleres?'"
-          v-model="numberOfWindows"
-          v-if="selectedArea === 'window' || includeWindows === true"
-          :rules="[validationRules.notEmpty]"
-        />
-        <v-card
-          v-for="(window, i) in numberOfWindowsList"
-          style="
-            border-left: 10px solid rgba(var(--v-theme-primary));
-            padding: 1rem;
-            margin-top: 1rem;
-          "
-          class="rounded"
-        >
-          <p>Vindu {{ i + 1 }}</p>
-          <v-text-field
-            v-model="window.height"
-            label="Høyde (cm)"
-            type="number"
-            :rules="[validationRules.notEmpty]"
-          ></v-text-field>
-          <v-text-field
-            v-model="window.width"
-            label="Bredde (cm)"
-            type="number"
-            :rules="[validationRules.notEmpty]"
-          ></v-text-field>
-        </v-card>
-      </div>
-      <v-text-field
-        v-if="selectedArea !== 'walls' && selectedArea !== 'window'"
-        label="Areal (m²)"
-        type="number"
-        class="mt-4"
-        v-model="areaSize"
-        :rules="[validationRules.notEmpty]"
-      />
-
-      <v-card class="assembly-card">
-        <div class="pa-4 pb-0">
-          Beregnet pris for montering:
-          <strong>{{ totalInstallationPrice.toFixed(2) }} NOK</strong>
-          <p style="font-style: italic; font-size: 0.9em">
-            Vi tar forbehold om at pris kan variere basert på faktiske mål og
-            forhold.
-          </p>
-          <v-checkbox :label="'Ønsker du montering?'" />
-        </div>
-      </v-card>
-    </div>
-    <v-card
-      class="mt-4 w-25"
-      style="position: sticky; top: 16px; max-height: 600px; overflow: auto"
-    >
-      <v-card-text>
-        <v-list>
-          <v-list-item-title>Samlet Areal</v-list-item-title>
-          <v-list-item v-if="wallArea > 0">
-            <v-list-item-content class="d-flex align-center">
-              <v-list-item-title class="mr-2">Vegger:</v-list-item-title>
-              <v-list-item-subtitle>{{ wallArea + "m²" }}</v-list-item-subtitle>
-            </v-list-item-content>
-          </v-list-item>
-          <v-list-item v-if="windowArea > 0">
-            <v-list-item-content class="d-flex align-center">
-              <v-list-item-title class="mr-2">Vinduer:</v-list-item-title>
-              <v-list-item-subtitle>{{
-                windowArea + "m²"
-              }}</v-list-item-subtitle>
-            </v-list-item-content>
-          </v-list-item>
-        </v-list>
-      </v-card-text>
-    </v-card>
-    <div v-for="product in suggestedProducts">
-      <div v-if="product.meassurement != null">
-        <div v-if="selectedArea === 'walls'">
-          Til disse veggene anbefaler vi at du kjøper:
-          <p>{{ product.title }}</p>
-          antall pakker: {{ Math.ceil(wallArea / product.meassurement) }}
-        </div>
-        <div v-else-if="selectedArea === 'roof'">
-          Til dette taket anbefaler vi at du kjøper:
-          <p>{{ product.title }}</p>
-          antall pakker: {{ Math.ceil(areaSize / product.meassurement) }}
-          <v-btn
-            @click="add(product, Math.ceil(areaSize / product.meassurement))"
-            >Legg til handlekurv</v-btn
-          >
-        </div>
-      </div>
-    </div>
-    <v-btn @click="fetchSuggestedProducts">fetch suggested products</v-btn>
-  </v-container>
-</template>
-
 <script setup lang="ts">
-  import type { Product } from "~/models/product.interface";
+  import { ref, reactive, computed } from "vue";
   import { sanityService } from "~/services/sanity-service";
 
-  const areasOfApplication = await sanityService.getPlacements();
-
-  const selectedArea = ref<string | null>("walls");
-
-  const wallHeight = ref<number | null>(null);
-  const wallLength = ref<number | null>(null);
-  const areaSize = ref(0);
-
-  const installationPricePerM2 = 300; // NOK
-  const totalInstallationPrice = computed(() => {
-    return (wallArea.value + windowArea.value) * installationPricePerM2;
-  });
-
-  const numberOfWalls = ref<number | string | null>(null);
-  const numberOfWallsList: Ref<
-    { text: string | null; height: number | null; length: number | null }[]
-  > = ref([]);
-
-  watch(
-    () => numberOfWalls.value,
-    (newVal) => {
-      const n = Number(newVal);
-      if (Number.isInteger(n) && n > 0) {
-        numberOfWallsList.value = Array.from({ length: n }, () => ({
-          text: null,
-          height: null,
-          length: null,
-        }));
-      } else {
-        numberOfWallsList.value = [];
-      }
-    }
+  // --- STATE ---
+  const step = ref(1);
+  const usage = ref<string | null>(null);
+  const wallCount = ref<number>(1);
+  const walls = reactive<{ length: number | null; width: number | null }[]>([
+    { length: null, width: null },
+  ]);
+  const totalArea = computed(() =>
+    elements.value.reduce((sum, e) => sum + e.width * e.height, 0)
   );
+  const installation = ref<string | null>(null);
+  const recommended = ref<any[]>([]);
 
-  const numberOfWindows = ref<number | string | null>(null);
+  // --- OPTIONS ---
+  const usageOptions = [
+    { label: "Vegger", value: "Vegger" },
+    { label: "Tak", value: "Tak" },
+    { label: "Gulv", value: "Gulv" },
+    { label: "Vindu", value: "Vindu" },
+  ];
+  const installationOptions = [
+    { label: "Kun materiale", value: "material" },
+    { label: "Materiale + montering", value: "material_and_install" },
+  ];
 
-  const numberOfWindowsList: Ref<
-    {
-      text: string | null;
-      height: number | null;
-      width: number | null;
-      area: number | null;
-    }[]
-  > = ref([]);
-
-  watch(
-    () => numberOfWindows.value,
-    (newVal) => {
-      const n = Number(newVal);
-      if (Number.isInteger(n) && n > 0) {
-        numberOfWindowsList.value = Array.from({ length: n }, () => ({
-          text: null,
-          height: null,
-          width: null,
-          area: null,
-        }));
-      } else {
-        numberOfWindowsList.value = [];
-      }
-    }
-  );
-
-  const includeWindows = ref(false);
-
-  const updateWindowAreas = () => {
-    for (const window of numberOfWindowsList.value) {
-      if (
-        window.height !== null &&
-        window.width !== null &&
-        window.height > 0 &&
-        window.width > 0
-      ) {
-        window.area = (window.height / 100) * (window.width / 100);
-      } else {
-        window.area = null;
-      }
-    }
-    console.log("🚀 ~ window areas:", numberOfWindowsList.value);
+  // --- FUNCTIONS ---
+  const next = () => step.value++;
+  const back = () => step.value--;
+  const reset = () => {
+    step.value = 1;
+    usage.value = null;
+    wallCount.value = 1;
+    walls.splice(0, walls.length, { length: null, width: null });
+    installation.value = null;
+    recommended.value = [];
   };
 
-  watch(
-    () => numberOfWindowsList.value.map((w) => [w.height, w.width]),
-    updateWindowAreas,
-    { deep: true }
+  const updateWallCount = () => {
+    if (wallCount.value > walls.length) {
+      for (let i = walls.length; i < wallCount.value; i++) {
+        walls.push({ length: null, width: null });
+      }
+    } else if (wallCount.value < walls.length) {
+      walls.splice(wallCount.value);
+    }
+  };
+  const elements = ref<{ height: number; width: number }[]>([
+    { height: 0, width: 0 },
+  ]);
+  const elementCount = ref(1);
+
+  function calculateInsulationNeed({
+    type,
+    items,
+    coverage,
+  }: {
+    type: "Vegger" | "Vindu";
+    items: { height: number; width: number }[];
+    coverage: number; // coverage per product (m² or lm)
+  }) {
+    if (!coverage || coverage <= 0) return 0;
+
+    let total = 0;
+
+    if (type === "Vegger") {
+      // Calculate total m²
+      total = items.reduce((sum, i) => sum + i.height * i.width, 0);
+    } else if (type === "Vindu") {
+      // Calculate total linear meters
+      total = items.reduce((sum, i) => sum + 2 * (i.height + i.width), 0);
+    }
+
+    // Round up to nearest product unit
+    return Math.ceil(total / coverage);
+  }
+
+  async function fetchProducts() {
+    const products = await sanityService.fetchProductsByUsage(usage.value);
+    recommended.value = products.map((p: any) => {
+      const neededUnits = calculateInsulationNeed({
+        type: usage.value === "Vindu" ? "Vindu" : "Vegger",
+        items: elements.value,
+        coverage: p.coverage,
+      });
+      return { ...p, neededUnits };
+    });
+  }
+
+  // ✅ total area (walls)
+
+  // ✅ total perimeter (windows)
+  const totalPerimeter = computed(() =>
+    elements.value.reduce((sum, e) => sum + 2 * (e.width + e.height), 0)
   );
-
-  const wallArea = computed(() => {
-    return (
-      numberOfWallsList.value.reduce(
-        (acc, wall) =>
-          acc + (Number(wall.height) || 0) * (Number(wall.length) || 0),
-        0
-      ) / 10000
-    );
-  });
-  const windowArea = computed(() => {
-    return numberOfWindowsList.value.reduce(
-      (acc, window) => acc + (window.area ?? 0),
-      0
-    );
-  });
-
-  const selectedThickness = ref<number | null>(null);
-
-  const suggestedProducts = ref(new Array<Product>());
-  async function fetchSuggestedProducts() {
-    console.log(selectedThickness);
-
-    suggestedProducts.value = await sanityService.getProductsByPlacement(
-      selectedArea.value || "",
-      selectedThickness.value || 50
-    );
-    console.log("🚀 ~ res:", suggestedProducts.value);
-  }
-
-  function add(product: Product, quantity = 1) {
-    useProductsStore().addToCart(product, quantity);
-  }
 </script>
 
-<style scoped></style>
+<template>
+  <v-card class="mx-auto pa-6 rounded-xl elevation-3" max-width="600">
+    <v-card-title class="text-h5 font-weight-bold mb-4">
+      Produktvelger
+    </v-card-title>
+    {{ usage }}
+    <!-- STEP 1: Bruksområde -->
+    <v-slide-y-transition>
+      <div v-if="step === 1">
+        <div class="text-subtitle-1 mb-3">Hva skal isoleres?</div>
+        <v-select
+          v-model="usage"
+          :items="usageOptions"
+          item-title="label"
+          item-value="value"
+          label="Velg bruksområde"
+          variant="outlined"
+          density="comfortable"
+        />
+        <v-btn class="mt-4" color="primary" :disabled="!usage" @click="next">
+          Neste
+        </v-btn>
+      </div>
+    </v-slide-y-transition>
+
+    <!-- STEP 2: Antall vegger -->
+    <v-slide-y-transition>
+      <div v-if="step === 2">
+        <div class="text-subtitle-1 mb-3">Hvor mange flater skal isoleres?</div>
+        <v-text-field
+          v-model.number="wallCount"
+          type="number"
+          min="1"
+          label="Antall"
+          variant="outlined"
+          density="comfortable"
+          @update:model-value="updateWallCount"
+        />
+
+        <v-btn
+          color="primary"
+          class="mt-4"
+          :disabled="wallCount < 1"
+          @click="next"
+        >
+          Neste
+        </v-btn>
+      </div>
+    </v-slide-y-transition>
+
+    <!-- STEP 3: Lengde og bredde -->
+    <v-slide-y-transition>
+      <div v-if="step === 3">
+        <div class="text-subtitle-1 mb-3">
+          {{
+            usage === "Vindu"
+              ? "Oppgi mål for hvert vindu (meter)"
+              : "Oppgi mål for hver flate (meter)"
+          }}
+        </div>
+
+        <!-- Antall flater/vinduer -->
+        <v-row dense>
+          <v-col cols="12" sm="6">
+            <v-text-field
+              v-model.number="elementCount"
+              type="number"
+              :label="usage === 'Vindu' ? 'Antall vinduer' : 'Antall vegger'"
+              variant="outlined"
+              density="comfortable"
+              min="1"
+              @update:model-value="
+                elements = Array.from({ length: elementCount }, () => ({
+                  width: 0,
+                  height: 0,
+                }))
+              "
+            />
+          </v-col>
+        </v-row>
+
+        <!-- Input fields for each -->
+        <v-row dense>
+          <v-col v-for="(e, i) in elements" :key="i" cols="12">
+            <v-card class="pa-3 mb-3" variant="outlined">
+              <div class="text-body-1 mb-2">
+                {{ usage === "Vindu" ? `Vindu ${i + 1}` : `Flate ${i + 1}` }}
+              </div>
+
+              <v-row dense>
+                <v-col cols="12" sm="6">
+                  <v-text-field
+                    v-model.number="e.width"
+                    type="number"
+                    :label="usage === 'Vindu' ? 'Bredde (m)' : 'Lengde (m)'"
+                    variant="outlined"
+                    density="comfortable"
+                  />
+                </v-col>
+                <v-col cols="12" sm="6">
+                  <v-text-field
+                    v-model.number="e.height"
+                    type="number"
+                    :label="usage === 'Vindu' ? 'Høyde (m)' : 'Høyde (m)'"
+                    variant="outlined"
+                    density="comfortable"
+                  />
+                </v-col>
+              </v-row>
+            </v-card>
+          </v-col>
+        </v-row>
+
+        <!-- Calculated summary -->
+        <div class="text-subtitle-2 mt-3">
+          <template v-if="usage === 'Vindu'">
+            <strong>Total omkrets:</strong> {{ totalPerimeter.toFixed(2) }} lm
+          </template>
+          <template v-else>
+            <strong>Totalt areal:</strong> {{ totalArea.toFixed(2) }} m²
+          </template>
+        </div>
+
+        <!-- Navigation buttons -->
+        <div class="d-flex justify-space-between mt-4">
+          <v-btn variant="text" @click="back">Tilbake</v-btn>
+          <v-btn
+            color="primary"
+            :disabled="usage === 'Vindu' ? totalPerimeter <= 0 : totalArea <= 0"
+            @click="next"
+          >
+            Neste
+          </v-btn>
+        </div>
+      </div>
+    </v-slide-y-transition>
+
+    <!-- STEP 4: Monteringstype -->
+    <v-slide-y-transition>
+      <div v-if="step === 4">
+        <div class="text-subtitle-1 mb-3">
+          Ønsker du kun materiale eller også montering?
+        </div>
+        <v-select
+          v-model="installation"
+          :items="installationOptions"
+          item-title="label"
+          item-value="value"
+          label="Velg type"
+          variant="outlined"
+          density="comfortable"
+        />
+        <div class="d-flex justify-space-between mt-4">
+          <v-btn variant="text" @click="back">Tilbake</v-btn>
+          <v-btn
+            color="primary"
+            :disabled="!installation"
+            @click="
+              async () => {
+                await fetchProducts();
+                next();
+              }
+            "
+          >
+            Vis anbefaling
+          </v-btn>
+        </div>
+      </div>
+    </v-slide-y-transition>
+
+    <!-- STEP 5: Resultat -->
+    <v-slide-y-transition>
+      <div v-if="step === 5">
+        <div class="text-subtitle-1 mb-4">Anbefalte produkter</div>
+
+        <div v-if="recommended.length === 0" class="text-grey">
+          Ingen produkter funnet for disse valgene.
+        </div>
+
+        <v-row dense>
+          <v-col v-for="prod in recommended" :key="prod._id" cols="12">
+            <v-card class="pa-3 mb-4" variant="outlined">
+              <v-img
+                :src="prod.image"
+                height="140"
+                class="rounded mb-2"
+                cover
+              />
+              <div class="text-h6">{{ prod.title }}</div>
+              <div class="text-body-2 mb-1">{{ prod.description }}</div>
+              <div class="font-weight-medium">{{ prod.price }} kr / enhet</div>
+
+              <div v-if="prod.neededUnits" class="mt-2">
+                <strong>Du trenger ca. {{ prod.neededUnits }} stk</strong>
+                (basert på
+                {{
+                  usage === "Vindu"
+                    ? totalPerimeter.toFixed(2) + " lm"
+                    : totalArea.toFixed(2) + " m²"
+                }})
+              </div>
+
+              <!-- Installation cost and totals when installation includes montasje -->
+              <div v-if="installation === 'material_and_install'" class="mt-3">
+                <div>
+                  <strong>Monteringskostnad:</strong>
+                  {{
+                    (usage === "Vindu"
+                      ? totalPerimeter * 150
+                      : totalArea * 300
+                    ).toFixed(0)
+                  }}
+                  kr
+                </div>
+
+                <div class="mt-1">
+                  <strong>Totalkostnad (material + montering):</strong>
+                  {{
+                    (
+                      Number(prod.price) * Number(prod.neededUnits || 0) +
+                      (usage === "Vindu"
+                        ? totalPerimeter * 150
+                        : totalArea * 300)
+                    ).toFixed(0)
+                  }}
+                  kr
+                </div>
+              </div>
+
+              <v-btn class="mt-3" color="primary" block>
+                Legg i handlekurv
+              </v-btn>
+            </v-card>
+          </v-col>
+        </v-row>
+
+        <div class="d-flex justify-space-between mt-6">
+          <v-btn variant="text" @click="back">Tilbake</v-btn>
+          <v-btn color="secondary" @click="reset">Start på nytt</v-btn>
+        </div>
+      </div>
+    </v-slide-y-transition>
+  </v-card>
+</template>
+
+<style scoped>
+  .v-card {
+    transition: all 0.3s ease;
+  }
+</style>

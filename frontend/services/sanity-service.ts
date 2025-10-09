@@ -9,6 +9,14 @@ export const sanityService = {
   title,
   price,
   description,
+  coverage,
+  usage[]->{
+    _id,
+    title,
+    "slug": slug.current
+  },
+  thickness,
+  unit,
   "slug": slug.current,
   "imageUrl": poster.asset->url,
   "category": category->{
@@ -28,15 +36,22 @@ export const sanityService = {
       price,
       description,
       "category": category->{
-        _id,
-        title,
-        description,
-        "imageUrl": poster.asset->url,
+      _id,
+      title,
+      description,
+      "imageUrl": poster.asset->url
       },
       "slug": slug.current,
       "imageUrl": poster.asset->url,
+      specs{
       thickness,
+      width,
+      length,
+      weight,
       unit
+      },
+      usage[]->{_id, title, slug}
+
     }`;
     return await client.fetch(query, { slug });
   },
@@ -91,32 +106,26 @@ export const sanityService = {
   }`;
     return await client.fetch(query);
   },
-  async getProductsByPlacement(value: string, thickness?: number) {
+  async fetchProductsByUsage(usage: string | null) {
     const client = useSanity();
-    let query = `*[_type == "product" && $value in placements[]->value`;
-    if (thickness) {
-      query += ` && thickness == $thickness`;
-    }
-    query += `]{
-    _id,
-    title,
-    price,
-    description,
-    thickness,
-    meassurement,
-    "slug": slug.current,
-    "imageUrl": poster.asset->url,
-    placements[]->{
+
+    const query = `
+    *[_type == "product" && 
+      count(usage[@->title match $usage || @->slug.current match $usage]) > 0
+    ]{
       _id,
       title,
-      value
-    },
-    "category": category->{
-      _id,
-      title
+      price,
+      coverage,
+      description,
+      thickness,
+      unit,
+      "image": poster.asset->url,
+      slug,
+      usage[]->{_id, title, slug}
     }
-  }`;
+  `;
 
-    return await client.fetch(query, { value, thickness });
+    return await client.fetch(query, { usage });
   },
 };

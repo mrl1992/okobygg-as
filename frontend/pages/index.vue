@@ -8,6 +8,11 @@
       await productsStore.fetchCategories();
     }
   });
+
+  const rerouteToProducts = (category: string) => {
+    productsStore.currentCategory = category;
+    navigateTo("/products");
+  };
 </script>
 
 <template>
@@ -38,7 +43,9 @@
               <div
                 class="d-flex flex-column flex-sm-row align-center justify-center gap-3 mt-6"
               >
-                <v-btn class="ma-2" color="primary" large>Kontakt oss</v-btn>
+                <v-btn class="ma-2" color="primary" large>
+                  <a href="mailto:post@okobygg.no">Kontakt oss</a>
+                </v-btn>
                 <NuxtLink to="/products">
                   <v-btn class="ma-2" color="white" variant="outlined" large
                     >Se produkter</v-btn
@@ -107,7 +114,14 @@
                 {{ category.description }}
               </p>
               <div class="card-cta">
-                <v-btn color="primary" class="ma-4" block>Les mer</v-btn>
+                <v-btn
+                  color="primary"
+                  class="ma-4"
+                  block
+                  @click="rerouteToProducts(category.title)"
+                >
+                  Se produkter</v-btn
+                >
               </div>
             </v-card-text>
           </v-card>
@@ -201,7 +215,7 @@
             background: linear-gradient(
               180deg,
               rgba(var(--v-theme-primary)) 0%,
-              rgba(13, 71, 161, 1) 100%
+              rgba(69, 138, 72, 1) 100%
             );
           "
         >
@@ -218,12 +232,16 @@
               finne den beste løsningen.
             </v-card-text>
 
-            <div class="d-flex flex-column flex-sm-row">
-              <v-btn variant="outlined" color="white" class="mr-4"
-                >Kontakt oss</v-btn
-              >
+            <div
+              class="d-flex flex-column flex-sm-row align-center justify-center gap-3 mt-6"
+            >
+              <v-btn variant="outlined" color="white" class="ma-2">
+                <a href="mailto:post@okobygg.no">Kontakt oss</a>
+              </v-btn>
               <NuxtLink to="/product-picker">
-                <v-btn variant="outlined" color="white">Produktvelger</v-btn>
+                <v-btn variant="outlined" color="white" class="ma-2"
+                  >Produktvelger</v-btn
+                >
               </NuxtLink>
             </div>
           </div>
